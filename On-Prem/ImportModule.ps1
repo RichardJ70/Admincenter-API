@@ -1,5 +1,4 @@
-﻿# Script to import NAV/BC admin module
-# Created by 4PS-MB / DKMV4PS
+﻿# Script to import NAV/BC admin module based on version
 
 if (!$Version) {
   $title     = 'BC version?'

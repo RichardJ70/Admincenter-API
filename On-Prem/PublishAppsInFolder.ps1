@@ -1,5 +1,4 @@
 ﻿# Script to only publish (not sync or install) all apps in a folder in a 4PS Construct Business Central database.
-# Created by 4PS-MB / DKMV4PS
 
 $BCVersion      = '200' # Business Central version, i.e. '150' or '160' or '170'.
 $ServerInstance = 'BC210Empty' # Name of the NST and therefore also the name of the Key file.

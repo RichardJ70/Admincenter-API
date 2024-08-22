@@ -1,5 +1,4 @@
 ﻿# Script to show all apps in a 4PS Construct Business Central database
-# Created by 4PS-MB / DKMV4PS
 
 $BCVersion      = '210' # Business Central version, i.e. '150' ~ '210'
 $ServerInstance = 'BC210Empty' # Name of the NST
