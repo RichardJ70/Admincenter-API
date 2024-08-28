@@ -166,6 +166,7 @@ write-host -ForegroundColor Green 'Environment' $environmentNameSandbox 'is sche
 ######### Appsource Apps #################
 #Get installed apps
 $environmentNameSandbox = "Fill in the environment name"
+$applicationFamily = 
 $installedApps = Invoke-WebRequest `
     -Method Get `
     -Uri    "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments/$environmentNameSandbox/apps" `
@@ -237,11 +238,12 @@ $Environments = Invoke-WebRequest `
     -Method Get `
     -Uri    "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/environments" `
     -Headers @{Authorization=("Bearer $accessToken")}
-$EnvironmentsToUpdate = ConvertFrom-Json $Environments.Content | Select-Object -ExpandProperty value | where-object {($_.applicationfamily -eq '4PSConstruct') -and ($_.status -eq 'Active')}
+$EnvironmentsToUpdate = ConvertFrom-Json $Environments.Content | Select-Object -ExpandProperty value | where-object {($_.status -eq 'Active')}
 
 # Get update window
 $EnvironmentsToUpdate | ForEach-Object {
     $Environment = $_.name
+    $applicationFamily = $_.applicationFamily
 
     $response = Invoke-WebRequest `
     -Method Get `
@@ -254,6 +256,7 @@ $EnvironmentsToUpdate | ForEach-Object {
 # Set update window
 $EnvironmentsToUpdate | ForEach-Object {
     $Environment = $_.name
+    $applicationFamily = $_.applicationFamily
 
     $response = Invoke-WebRequest `
     -Method Put `
@@ -271,6 +274,7 @@ $EnvironmentsToUpdate | ForEach-Object {
 # Get scheduled updates
 $EnvironmentsToUpdate | ForEach-Object {
     $Environment = $_.name
+    $applicationFamily = $_.applicationFamily
     Write-Host 'Environment:' $Environment -ForegroundColor Yellow
     
     $response = Invoke-WebRequest `
@@ -288,6 +292,7 @@ $EnvironmentsToUpdate | ForEach-Object {
 # Reschedule update
 $EnvironmentsToUpdate | ForEach-Object {
     $Environment = $_.name
+    $applicationFamily = $_.applicationFamily
 
     Invoke-WebRequest `
     -Method Put `
@@ -305,6 +310,8 @@ $EnvironmentsToUpdate | ForEach-Object {
 # Get installed apps
 $EnvironmentsToUpdate | ForEach-Object {
     $Environment = $_.name
+    $applicationFamily = $_.applicationFamily
+
     Write-Host 'Installed apps for Environment:' $Environment -ForegroundColor Yellow
     $Uri = "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments/"+$Environment+"/apps"
 
@@ -318,6 +325,8 @@ $EnvironmentsToUpdate | ForEach-Object {
 # Get available updates
 $EnvironmentsToUpdate | ForEach-Object {
     $Environment = $_.name
+    $applicationFamily = $_.applicationFamily
+
     Write-Host 'Available updates for Environment:' $Environment -ForegroundColor Yellow
     $Uri = "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments/"+$Environment+"/apps/availableUpdates"
 
@@ -331,6 +340,7 @@ $EnvironmentsToUpdate | ForEach-Object {
 # Update the apps for all environments
 $EnvironmentsToUpdate | ForEach-Object {
     $Environment = $_.name
+    $applicationFamily = $_.applicationFamily
     Write-Host 'Environment:' $Environment -ForegroundColor Yellow
     $Uri = "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments/"+$Environment+"/apps/availableUpdates"
     
@@ -345,7 +355,7 @@ $EnvironmentsToUpdate | ForEach-Object {
         $appTargetVersion = $_.version
         $appUri = "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments/"+$Environment+"/apps/$appIdToUpdate/update"
 
-        Invoke-WebRequest `
+        $response = Invoke-WebRequest `
         -Method Post `
         -Uri    $appUri `
         -Body   (@{
@@ -361,6 +371,8 @@ $EnvironmentsToUpdate | ForEach-Object {
 # Check update app status
 $EnvironmentsToUpdate | ForEach-Object {
     $Environment = $_.name
+    $applicationFamily = $_.applicationFamily
+
     Write-Host 'Environment:' $Environment -ForegroundColor Yellow
     $Uri = "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments/"+$Environment+"/apps/availableUpdates"
  
@@ -376,7 +388,7 @@ $EnvironmentsToUpdate | ForEach-Object {
         -Method Get `
         -Uri    "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments/$Environment/apps/$appIdToUpdate/operations" `
         -Headers @{Authorization=("Bearer $accessToken")}
-        $response = ConvertFrom-Json $response.Content | Select-Object -ExpandProperty value | Select-Object -Property appId, name, publisher, version, status
+        $response = ConvertFrom-Json $response.Content | Select-Object -ExpandProperty value | Select-Object -Property status
         Write-Host -ForegroundColor Green 'Update app:' $_.name 
         Write-Host -ForegroundColor Green 'New Version' $_.version 
         Write-Host -ForegroundColor Green 'Status: ' $response.status
