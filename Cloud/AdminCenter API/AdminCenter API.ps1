@@ -13,13 +13,6 @@ $accessToken = $authContext.AccessToken
 Write-Host -ForegroundColor Cyan 'Authentication complete - we have an access token for Business Central, and it is stored in the $accessToken variable.'
 
 ######### ENVIRONMENT MANAGEMENT ##################
-# Get list of active environments
-$response = Invoke-WebRequest `
-    -Method Get `
-    -Uri    "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/environments" `
-    -Headers @{Authorization=("Bearer $accessToken")}
-Write-Host -ForegroundColor Green 'Active BVGO environments'
-ConvertFrom-Json $response.Content | Select-Object -ExpandProperty value | Select-Object -Property name, type, applicationfamily, applicationversion, status, platformversion | where-object {($_.status -eq 'Active')} |Format-Table | Out-String | Write-Host
 
 # Delete Sandbox environment
 # BE cAREFULL: NO QUESTIONS ASKED !!!! #
