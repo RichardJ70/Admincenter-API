@@ -14,7 +14,7 @@ if ($decision -eq 0) {
 }
 $environmentList = Invoke-WebRequest `
     -Method Get `
-    -Uri    "https://api.businesscentral.dynamics.com/admin/v2.21/applications/$applicationFamily/environments" `
+    -Uri    "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments" `
     -Headers @{Authorization=("Bearer $accessToken")}
 Write-Host -ForegroundColor Green 'Active 4PS' $environmenttype 'environments'
 ConvertFrom-Json $environmentList.Content | Select-Object -ExpandProperty value | Select-Object -Property name, type, applicationfamily, applicationversion, status, platformversion | where-object {($_.status -eq 'Active') -and ($_.type -eq $environmentType) -and ($_.name -ge $namefilter)} |Format-Table | Out-String | Write-Host
