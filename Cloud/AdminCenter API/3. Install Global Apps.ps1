@@ -86,7 +86,7 @@ $EnvironmentsToUpdate | ForEach-Object {
             Start-Sleep -Seconds 15
         }
     }
-    Until( $operationsRunning.count -eq '' )
+    Until( $operationsRunning.count -eq $NoOfApps )
 
     # List installed apps
     Write-Host "Installed apps in $Environment"
@@ -94,6 +94,6 @@ $EnvironmentsToUpdate | ForEach-Object {
         -Method Get `
         -Uri    "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments/$environment/apps" `
         -Headers @{Authorization=("Bearer $accessToken")}
-    Write-Host (ConvertTo-Json (ConvertFrom-Json $response.Content))
+    ConvertFrom-Json $response.Content | Select-Object -ExpandProperty Value | Select-Object -Property id, name, publisher, version, state | Format-Table | Out-String | Write-Host
 }
 

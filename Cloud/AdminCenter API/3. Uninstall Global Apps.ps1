@@ -26,6 +26,7 @@ if ($decision -eq 0) {
 } else {
     $UninstallDependentApps = $false
 }
+
 $EnvironmentsToUpdate | ForEach-Object {
     $Environment = $_.name
 

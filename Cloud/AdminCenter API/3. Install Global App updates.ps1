@@ -20,10 +20,10 @@ $EnvironmentsToUpdate | ForEach-Object {
 
     $response = Invoke-WebRequest `
     -Method Get `
-    -Uri    $Uri "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments/$Environment/apps/availableUpdates" `
+    -Uri    "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments/$Environment/apps/availableUpdates" `
     -Headers @{Authorization=("Bearer $accessToken")}
-    ConvertFrom-Json $response.Content | Select-Object -ExpandProperty value | Select-Object -Property appId, name, publisher, version | Sort-Object -Property name | Format-Table | Out-String | Write-Host
     $appsToUpdate = ConvertFrom-Json $response.Content | Select-Object -ExpandProperty value
+    $appsToUpdateList = $appsToUpdate | Select-Object -Property appId, name, publisher, version | Sort-Object -Property name | Format-Table | Out-String
 
     $i = 1
     $NoOfApps = $appsToUpdate.Count
@@ -32,7 +32,7 @@ $EnvironmentsToUpdate | ForEach-Object {
         Write-Host ("No available updates, you are up-to-date.") -ForegroundColor Green
     } else {
         Write-Host ("Found $NoOfApps updates:") -ForegroundColor Yellow
-        $appsToUpdate
+        $appsToUpdateList
 
         $title = "Install app updates"
         $question = "Do you want to install these updates in the environment?"
@@ -46,7 +46,7 @@ $EnvironmentsToUpdate | ForEach-Object {
                 Write-Host ("You are not using the maintenance window. Updates will start shortly and user sessions may be lost. Continue?") -ForegroundColor Magenta
                 pause
             }
-            foreach ($App in $Apps) {
+            foreach ($App in $appsToUpdate) {
               $AppId = $App.appId
               $AppVer = $App.version
               $AppName = $App.name
@@ -57,7 +57,7 @@ $EnvironmentsToUpdate | ForEach-Object {
               $appTargetVersion = $AppVer
               $response = Invoke-WebRequest `
                   -Method Post `
-                  -Uri    "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments/$environmentName/apps/$appIdToUpdate/update" `
+                  -Uri    "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments/$Environment/apps/$appIdToUpdate/update" `
                   -Body   (@{
                                targetVersion = $appTargetVersion
                                installOrUpdateNeededDependencies = $true
@@ -72,18 +72,24 @@ $EnvironmentsToUpdate | ForEach-Object {
             Do {
                 $response = Invoke-WebRequest `
                 -Method Get `
-                -Uri    "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments/$environmentName/operations" `
+                -Uri    "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments/$Environment/operations" `
                 -Headers @{Authorization=("Bearer $accessToken")}
-                $Operations = $response.Content | ConvertFrom-Json
-                $Operations = $Operations.value
-                $operationsRunning = $Operations | where-object { $_.status -eq "scheduled" -or $_.status -eq "running" }
-                $Number = $operationsRunning.count
+                $OperationsRunning = ConvertFrom-Json $response.Content | Select-Object -ExpandProperty value | where-object {($_.status -eq "scheduled") -or ($_.status -eq "running")} | Select-Object id, status, createdOn, parameters | Format-Table
+                $Number = $OperationsRunning.Count
                 if ( $operationsRunning.count -ne '' ) {
                     write-host "Installation of $Number extensions remaining..."
                     Start-Sleep -Seconds 15
                 }
             }
-            Until( $operationsRunning.count -eq '' )
+            Until( $operationsRunning.count -eq $NoOfApps )
+
+            # List installed apps
+            Write-Host "Installed apps in $Environment"
+            $response = Invoke-WebRequest `
+                -Method Get `
+                -Uri    "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments/$environment/apps" `
+                -Headers @{Authorization=("Bearer $accessToken")}
+            ConvertFrom-Json $response.Content | Select-Object -ExpandProperty Value | Select-Object -Property id, name, publisher, version, state | Format-Table | Out-String | Write-Host
         } else { Write-Host ("Updates skipped") -ForegroundColor Magenta }      
     }
 }

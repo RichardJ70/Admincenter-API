@@ -1,5 +1,5 @@
 # Get active 4PS environments
-$namefilter = "VWB0173T"
+$namefilter = "VWB0402T"
 
 $environmentList = Invoke-WebRequest `
     -Method Get `
