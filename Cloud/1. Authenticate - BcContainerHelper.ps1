@@ -3,12 +3,15 @@
 ####                                                                            ####
 #### To be able to use the admin center API check the learning portal           ####
 
-Install-Module BcContainenrHelper
+Install-Module BcContainerHelper -Force
 Import-Module BcContainerHelper -Verbose
 
 #Shared Parameters
 $adminVersion = "V2.21"
 $applicationFamily = "4PSConstruct"
+
+$bcContainerHelperConfig.apiBaseUrl = "https://4psconstruct.api.bc.dynamics.com"
+$bcContainerHelperConfig.baseUrl = "https://4psconstruct.bc.dynamics.com"
 
 ######### Login #############
 $authContext = New-BcAuthContext -includeDeviceLogin
