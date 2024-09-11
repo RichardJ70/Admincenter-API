@@ -1,6 +1,6 @@
 # Rename Environment
-$environmentNameToRename = "Fill in the environment name to rename"
-$newenvironmentName = "Fill in the new environment name"
+$environmentNameToRename = "BVGO_Template2"
+$newenvironmentName = "VWBTemplate"
 $response = Invoke-WebRequest `
     -Method Post `
     -Uri    "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments/$environmentNameToRename/rename" `
