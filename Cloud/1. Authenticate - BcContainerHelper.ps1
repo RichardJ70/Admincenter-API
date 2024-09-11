@@ -1,7 +1,9 @@
-﻿#### This powershell script can be used for the most common admin center tasks  ####
-#### for both single environments and multi environments within the same tenant ####
-####                                                                            ####
-#### To be able to use the admin center API check the learning portal           ####
+﻿#### This powershell script can be used for the most common admin center tasks    ####
+#### for both single environments and multi environments within the same tenant   ####
+####                                                                              ####
+#### To be able to use the admin center API check the learning portal             ####
+#### Using BcContainerHelper, you dont't need to have an app registration         ####
+#### Having a role as Dynamics 365 (Business Central) Administrator is sufficient ####
 
 #Install-Module BcContainerHelper -Force
 Import-Module BcContainerHelper -Verbose
