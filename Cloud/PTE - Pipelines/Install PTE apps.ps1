@@ -14,7 +14,7 @@ Import-Module BcContainerHelper -Verbose
 #Shared Parameters
 $environment = "SandBox4PSNL" #4PS
 $environment = "Sandbox" #Standard BC
-$tenant = "4e8a3658-1a43-4a8a-a9d8-02a5c74dbbf5"
+$tenant = ""
 
 #4PS Construct
 #$bcContainerHelperConfig.apiBaseUrl = "https://4psconstruct.api.bc.dynamics.com"
