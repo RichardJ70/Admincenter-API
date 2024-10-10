@@ -2,6 +2,18 @@
 # Script to run a codeunit in Business Central using a webservice  
 # The script will first authenticate with Business Central and then run the codeunit
 # The script will output the result of the codeunit to the console
+# The script is written in PowerShell and uses the BcContainerHelper module for authentication
+#
+# It uses a codeunit with a webservice called UseAPICodeunit with a procedure called PingPong with the following content:
+# codeunit 50500 APICodeunit
+# {
+#     procedure PingPong(pingText: Text): Text
+#     begin
+#         if pingText = 'ping' then
+#             exit('pong');
+#         exit('');
+#     end;
+# }
 
 Install-Module BcContainerHelper -Force
 Import-Module BcContainerHelper -Verbose
