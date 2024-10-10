@@ -1,6 +1,6 @@
 # Get list of active 4PS environments
 $title = "Environment Selection"
-$namefilter = "VWB"
+$namefilter = ""
 $question = "Do you want to use all active Sandbox or Production environments?"
 $choices = New-Object Collections.ObjectModel.Collection[Management.Automation.Host.ChoiceDescription]
 $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&1 - Sandbox'))
