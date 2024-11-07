@@ -46,15 +46,15 @@ $EnvironmentsToUpdate | ForEach-Object {
                 pause
             }
             foreach ($App in $appsToUpdate) {
-              $AppId = $App.appId
-              $AppVer = $App.version
-              $AppName = $App.name
-              Write-Host ("Scheduling update $i of $NoOfApps : app Id: $AppId   Name: $AppName   Version: $AppVer") -ForegroundColor Yellow
-              
-              # Update apps
-              $appIdToUpdate = $AppId
-              $appTargetVersion = $AppVer
-              $response = Invoke-WebRequest `
+                $AppId = $App.appId
+                $AppVer = $App.version
+                $AppName = $App.name
+                Write-Host ("Scheduling update $i of $NoOfApps : app Id: $AppId   Name: $AppName   Version: $AppVer") -ForegroundColor Yellow
+                
+                # Update apps
+                $appIdToUpdate = $AppId
+                $appTargetVersion = $AppVer
+                $response = Invoke-WebRequest `
                   -Method Post `
                   -Uri    "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments/$Environment/apps/$appIdToUpdate/update" `
                   -Body   (@{
@@ -64,6 +64,7 @@ $EnvironmentsToUpdate | ForEach-Object {
                             } | ConvertTo-Json) `
                   -Headers @{Authorization=("Bearer $accessToken")} `
                   -ContentType "application/json"
+                $i = $i +1
             }
             # Check update status
             if ($useMaintenanceWindows -eq $false) {
