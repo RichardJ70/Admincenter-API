@@ -12,14 +12,19 @@ Install-Module BcContainerHelper -Force
 Import-Module BcContainerHelper -Verbose
 
 #Shared Parameters
-#$environment = "SandBox4PSNL" #4PS
+$environment = "SandBox4PSNL" #4PS
+$environment = "Production"
 $environment = "Sandbox" #Standard BC
 $tenant = "4e8a3658-1a43-4a8a-a9d8-02a5c74dbbf5"
-$appfiles = "D:\Apps-Git\Demo\Standaard\OpenData\RISA Support B.V._Open Data Check_24.0.1.0.app"
+$appfiles = "D:\Apps-Git\RISA\4PS\RISA_Application\RISA Support BV_RISA Application_24.4.0.0.app",
+            "D:\Apps-Git\RISA\4PS\RISA_Financial\RISA Support BV_RISA Financial_24.4.0.0.app",
+            "D:\Apps-Git\RISA\4PS\RISA_IT\RISA Support BV_RISA_IT_24.0.0.0.app",
+            "D:\Apps-Git\RISA\4PS\RISA_Projects\RISA Support BV_RISA Projects_24.0.0.0.app",
+            "D:\Apps-Git\RISA\4PS\RISA_Sales\RISA Support BV_RISA Sales_24.0.0.0.app"
 
 #4PS Construct
-#$bcContainerHelperConfig.apiBaseUrl = "https://4psconstruct.api.bc.dynamics.com"
-#$bcContainerHelperConfig.baseUrl = "https://4psconstruct.bc.dynamics.com"
+$bcContainerHelperConfig.apiBaseUrl = "https://4psconstruct.api.bc.dynamics.com"
+$bcContainerHelperConfig.baseUrl = "https://4psconstruct.bc.dynamics.com"
 
 #Standard BC
 #Not required to set these values but after changing the values, the script will work for 4PS Construct but not anymore for Standard BC
@@ -30,16 +35,12 @@ $bcContainerHelperConfig.baseUrl = "https://businesscentral.dynamics.com"
 $authContext = New-BcAuthContext -includeDeviceLogin
 $accessToken = $authContext.AccessToken
 
-function GetAuthHeaders {
-    return @{ "Authorization" = "Bearer $($accessToken)" }
-}
-
 Write-Host -ForegroundColor Cyan 'Authentication complete - we have an access token for Business Central, and it is stored in the $accessToken variable.'
 
 <#
 companies
 Write-Host "$automationApiUrl/companies"
-$companies = Invoke-RestMethod -Headers (GetAuthHeaders) -Method Get -Uri "$automationApiUrl/companies" -UseBasicParsing
+$companies = Invoke-RestMethod -Headers (@{ "Authorization" = "Bearer $($accessToken)" }) -Method Get -Uri "$automationApiUrl/companies" -UseBasicParsing
 $companies = $companies.value
 $companies | ForEach-Object {
     $companyId = $_.id
@@ -51,29 +52,34 @@ $companies | ForEach-Object {
 # Standard BC
 # https://api.businesscentral.dynamics.com/v2.0/$tenant/$environment/api/microsoft/automation/v2.0/companies($companyid)/extensions
 $automationApiUrl = "$($bcContainerHelperConfig.apiBaseUrl.TrimEnd('/'))/v2.0/$tenant/$environment/api/microsoft/automation/v2.0"
+$Contents = Invoke-WebRequest -Headers (@{ "Authorization" = "Bearer $($accessToken)" }) -Method Get -Uri "$automationApiUrl"
+$Contents = Invoke-WebRequest -Headers (@{ "Authorization" = "Bearer $($accessToken)" }) -Method Get -Uri "$automationApiUrl/entityDefinitions"
+$Contents = Invoke-WebRequest -Headers (@{ "Authorization" = "Bearer $($accessToken)" }) -Method Get -Uri "$automationApiUrl/extensions"
+(ConvertFrom-Json $Contents.Content).value | Sort-Object -Property DisplayName
 
-<#
+
+
 # 4PS Construct
 # Geen api calls beschikbaar waar extension in beschikbaar zijn. Mogelijk dat dit komt door het verschil in versie van 4PS Construct en Business Central Standard
 # Onderstaande zijn getest, maar hebben geen resultaat opgeleverd
-#$automationApiUrl = "$($bcContainerHelperConfig.apiBaseUrl.TrimEnd('/'))/v2.0/$environment/api/microsoft/admin/beta" #Get installed api calls microsoft/admin/beta
-#$automationApiUrl = "$($bcContainerHelperConfig.apiBaseUrl.TrimEnd('/'))/v2.0/$environment/api/microsoft/automation/beta" #Get installed api calls microsoft/automation/beta
-#$automationApiUrl = "$($bcContainerHelperConfig.apiBaseUrl.TrimEnd('/'))/v2.0/$environment/api/microsoft/automate/v1.0" #Get installed api calls microsoft/automate/beta
-#$automationApiUrl = "$($bcContainerHelperConfig.apiBaseUrl.TrimEnd('/'))/v2.0/$environment/api/microsoft/runtime/beta" #Get installed api calls microsoft/automation/beta
-#>
-<#
-$Contents = Invoke-WebRequest -Headers (GetAuthHeaders) -Method Get -Uri "$automationApiUrl"
+$automationApiUrl = "$($bcContainerHelperConfig.apiBaseUrl.TrimEnd('/'))/v2.0/$environment/api/microsoft/admin/beta" #Get installed api calls microsoft/admin/beta
+$automationApiUrl = "$($bcContainerHelperConfig.apiBaseUrl.TrimEnd('/'))/v2.0/$environment/api/microsoft/automation/beta" #Get installed api calls microsoft/automation/beta
+$automationApiUrl = "$($bcContainerHelperConfig.apiBaseUrl.TrimEnd('/'))/v2.0/$environment/api/microsoft/automate/v1.0" #Get installed api calls microsoft/automate/beta
+$automationApiUrl = "$($bcContainerHelperConfig.apiBaseUrl.TrimEnd('/'))/v2.0/$environment/api/microsoft/runtime/beta" #Get installed api calls microsoft/automation/beta
+
+$Contents = Invoke-WebRequest -Headers (@{ "Authorization" = "Bearer $($accessToken)" }) -Method Get -Uri "$automationApiUrl"
 (ConvertFrom-Json $Contents.Content).value | Sort-Object -Property DisplayName
-#>
+
 
 #Get PTE Extensions per company
-$companies = Invoke-RestMethod -Headers (GetAuthHeaders) -Method Get -Uri "$automationApiUrl/companies" -UseBasicParsing
+$companies = Invoke-RestMethod -Headers (@{ "Authorization" = "Bearer $($accessToken)" }) -Method Get -Uri "$automationApiUrl/companies" -UseBasicParsing
 $companies = $companies.value
 $companies | ForEach-Object {
     $companyId = $_.id
     $companyName = $_.name  
+   
     Write-Host "Extensions from company $companyName with id $companyId" -ForegroundColor Green
-    $getExtensions = Invoke-WebRequest -Headers (GetAuthHeaders) -Method Get -Uri "$automationApiUrl/companies($companyId)/extensions"
+    $getExtensions = Invoke-WebRequest -Headers (@{ "Authorization" = "Bearer $($accessToken)" }) -Method Get -Uri "$automationApiUrl/companies($companyId)/extensions"
     $extensions = (ConvertFrom-Json $getExtensions.Content).value | Sort-Object -Property DisplayName | Where-Object {($_.PublishedAs -EQ ' PTE')}
     (ConvertFrom-Json $getExtensions.Content).value | Sort-Object -Property DisplayName | Select-Object -Property id,DisplayName,versionMajor,versionMinor,versionBuild,versionRevision,publisher, isInstalled, PublishedAs | Where-Object {($_.PublishedAs -EQ ' PTE')} | Format-Table -AutoSize
 
@@ -111,20 +117,20 @@ $companies | ForEach-Object {
             }
         
             if (!$existingApp) {
-                $extensionUpload = (Invoke-RestMethod -Method Get -Uri "$automationApiUrl/companies($companyId)/extensionUpload" -Headers (GetAuthHeaders)).value
+                $extensionUpload = (Invoke-RestMethod -Method Get -Uri "$automationApiUrl/companies($companyId)/extensionUpload" -Headers (@{ "Authorization" = "Bearer $($accessToken)" })).value
                 Write-Host @newLine "."
                 if ($extensionUpload -and $extensionUpload.systemId) {
                     $extensionUpload = Invoke-RestMethod `
                         -Method Patch `
                         -Uri "$automationApiUrl/companies($companyId)/extensionUpload($($extensionUpload.systemId))" `
-                        -Headers ((GetAuthHeaders) + $ifMatchHeader + $jsonHeader) `
+                        -Headers ((@{ "Authorization" = "Bearer $($accessToken)" }) + $ifMatchHeader + $jsonHeader) `
                         -Body ($body | ConvertTo-Json -Compress)
                 }
                 else {
                     $ExtensionUpload = Invoke-RestMethod `
                         -Method Post `
                         -Uri "$automationApiUrl/companies($companyId)/extensionUpload" `
-                        -Headers ((GetAuthHeaders) + $jsonHeader) `
+                        -Headers ((@{ "Authorization" = "Bearer $($accessToken)" }) + $jsonHeader) `
                         -Body ($body | ConvertTo-Json -Compress)
                 }
                 Write-Host @newLine "."
@@ -135,13 +141,13 @@ $companies | ForEach-Object {
                 Invoke-RestMethod `
                     -Method Patch `
                     -Uri $extensionUpload.'extensionContent@odata.mediaEditLink' `
-                    -Headers ((GetAuthHeaders) + $ifMatchHeader + $streamHeader) `
+                    -Headers ((@{ "Authorization" = "Bearer $($accessToken)" }) + $ifMatchHeader + $streamHeader) `
                     -Body $fileBody | Out-Null
                 Write-Host @newLine "."    
                 Invoke-RestMethod `
                     -Method Post `
                     -Uri "$automationApiUrl/companies($companyId)/extensionUpload($($extensionUpload.systemId))/Microsoft.NAV.upload" `
-                    -Headers ((GetAuthHeaders) + $ifMatchHeader) | Out-Null
+                    -Headers ((@{ "Authorization" = "Bearer $($accessToken)" }) + $ifMatchHeader) | Out-Null
                 Write-Host @newLine "."    
                 $completed = $false
                 $errCount = 0
@@ -150,7 +156,7 @@ $companies | ForEach-Object {
                 {
                     Start-Sleep -Seconds $sleepSeconds
                     try {
-                        $extensionDeploymentStatusResponse = Invoke-WebRequest -Headers (GetAuthHeaders) -Method Get -Uri "$automationApiUrl/companies($companyId)/extensionDeploymentStatus" -UseBasicParsing
+                        $extensionDeploymentStatusResponse = Invoke-WebRequest -Headers (@{ "Authorization" = "Bearer $($accessToken)" }) -Method Get -Uri "$automationApiUrl/companies($companyId)/extensionDeploymentStatus" -UseBasicParsing
                         $extensionDeploymentStatuses = (ConvertFrom-Json $extensionDeploymentStatusResponse.Content).value
                     
                         $completed = $true
@@ -196,7 +202,7 @@ $companies | ForEach-Object {
         throw
     }
     finally {
-        $getExtensions = Invoke-WebRequest -Headers (GetAuthHeaders) -Method Get -Uri "$automationApiUrl/companies($companyId)/extensions" -UseBasicParsing
+        $getExtensions = Invoke-WebRequest -Headers (@{ "Authorization" = "Bearer $($accessToken)" }) -Method Get -Uri "$automationApiUrl/companies($companyId)/extensions" -UseBasicParsing
         $extensions = (ConvertFrom-Json $getExtensions.Content).value | Sort-Object -Property DisplayName | Where-Object {($_.PublishedAs -EQ ' PTE')}
         (ConvertFrom-Json $getExtensions.Content).value | Sort-Object -Property DisplayName | Select-Object -Property id,DisplayName,versionMajor,versionMinor,versionBuild,versionRevision,publisher, isInstalled, PublishedAs | Where-Object {($_.PublishedAs -EQ ' PTE')} | Format-Table -AutoSize
         TrackTrace -telemetryScope $telemetryScope

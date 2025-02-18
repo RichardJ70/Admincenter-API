@@ -39,6 +39,7 @@ $EnvironmentsToUpdate | ForEach-Object {
         $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Yes'))
         $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&No'))
         $decision = $Host.UI.PromptForChoice($title, $question, $choices, 0)
+        $i = 1
 
         if ($decision -eq 0) {
             if ($useMaintenanceWindows -eq $false) {
@@ -66,37 +67,37 @@ $EnvironmentsToUpdate | ForEach-Object {
                   -ContentType "application/json"
                 $i = $i +1
             }
-            # Check update status
-            if ($useMaintenanceWindows -eq $false) {
-                Do {
-                    #Operations check shows all updates within the update windows. Also the already installed ones. Useless to count.
-                    #$response = Invoke-WebRequest `
-                    #-Method Get `
-                    #-Uri    "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments/$Environment/operations" `
-                    #-Headers @{Authorization=("Bearer $accessToken")}
-                    #$OperationsRunning = ConvertFrom-Json $response.Content | Select-Object -ExpandProperty value | where-object {($_.status -eq "scheduled") -or ($_.status -eq "running")} | Select-Object id, status, createdOn, parameters | Format-Table
-
-                    Start-Sleep -Seconds 15
-                    $response = Invoke-WebRequest `
-                        -Method Get `
-                        -Uri    "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments/$Environment/apps/availableUpdates" `
-                        -Headers @{Authorization=("Bearer $accessToken")}
-                    $UpdatesRemaining = ConvertFrom-Json $response.Content | Select-Object -ExpandProperty value
-                    $NoOfUpdatesRemaining = $UpdatesRemaining.count
-                    Write-host "Updates remaining $NoOfUpdatesRemaining"
-                }
-                Until( $NoOfUpdatesRemaining -eq 0 )
-
-                # List installed apps
-                Write-Host "Installed apps in $Environment"
-                $response = Invoke-WebRequest `
-                    -Method Get `
-                    -Uri    "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments/$environment/apps" `
-                    -Headers @{Authorization=("Bearer $accessToken")}
-                ConvertFrom-Json $response.Content | Select-Object -ExpandProperty Value | Select-Object -Property id, name, publisher, version, state | Format-Table | Out-String | Write-Host
-            } 
+       
         } else { 
                 Write-Host ("Updates skipped") -ForegroundColor Magenta 
         }      
     }
 }
+
+$EnvironmentsToUpdate | ForEach-Object {
+    $Environment = $_.name
+    $applicationFamily = $_.applicationFamily
+    Write-Host 'Check update status for Environment:' $Environment -ForegroundColor Green
+
+    if ($useMaintenanceWindows -eq $false) {
+        Do {
+            Start-Sleep -Seconds 15
+            $response = Invoke-WebRequest `
+                -Method Get `
+                -Uri    "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments/$Environment/apps/availableUpdates" `
+                -Headers @{Authorization=("Bearer $accessToken")}
+            $UpdatesRemaining = ConvertFrom-Json $response.Content | Select-Object -ExpandProperty value
+            $NoOfUpdatesRemaining = $UpdatesRemaining.count
+            Write-host "Updates remaining $NoOfUpdatesRemaining"
+        }
+        Until( $NoOfUpdatesRemaining -eq 0 )
+
+        # List installed apps
+        Write-Host "Installed apps in $Environment"
+        $response = Invoke-WebRequest `
+            -Method Get `
+            -Uri    "https://api.businesscentral.dynamics.com/admin/$adminVersion/applications/$applicationFamily/environments/$environment/apps" `
+            -Headers @{Authorization=("Bearer $accessToken")}
+        ConvertFrom-Json $response.Content | Select-Object -ExpandProperty Value | Select-Object -Property id, name, publisher, version, state | Format-Table | Out-String | Write-Host
+    }
+} 

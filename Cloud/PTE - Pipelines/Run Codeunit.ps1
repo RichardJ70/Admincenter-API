@@ -45,6 +45,7 @@ Write-Host -ForegroundColor Cyan 'Authentication complete - we have an access to
 # https://api.businesscentral.dynamics.com/v2.0/$environment/ODataV4/<Webservicename>_<Procedure>
 # 4PS Construct
 # https://4psconstruct.api.bc.dynamics.com/v2.0/$environment/ODataV4/<Webservicename>_<Procedure>
+
 $automationApiUrl = "$($bcContainerHelperConfig.apiBaseUrl.TrimEnd('/'))/v2.0/$environment/ODataV4/UseAPICodeunit_PingPong"
 
 Invoke-WebRequest `

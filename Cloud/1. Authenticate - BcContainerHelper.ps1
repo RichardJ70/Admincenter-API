@@ -12,8 +12,8 @@ Import-Module BcContainerHelper -Verbose
 $adminVersion = "V2.21"
 $applicationFamily = "4PSConstruct"
 
-$bcContainerHelperConfig.apiBaseUrl = "https://4psconstruct.api.bc.dynamics.com"
-$bcContainerHelperConfig.baseUrl = "https://4psconstruct.bc.dynamics.com"
+#$bcContainerHelperConfig.apiBaseUrl = "https://4psconstruct.api.bc.dynamics.com"
+#$bcContainerHelperConfig.baseUrl = "https://4psconstruct.bc.dynamics.com"
 
 ######### Login #############
 $authContext = New-BcAuthContext -includeDeviceLogin
